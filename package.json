@@ -1,0 +1,23 @@
+{
+  "name": "dunia-ceria-anak",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplikasi belajar & bermain untuk anak usia 1-7 tahun: berhitung, huruf hijaiyah, menggambar, dan lainnya.",
+  "scripts": {
+    "vendor": "node scripts/copy-vendor.js",
+    "serve": "npx --yes http-server www -p 8080 -c-1",
+    "check": "node scripts/check.js",
+    "sync": "npm run vendor && npx cap sync android",
+    "build:apk": "npm run sync && cd android && ./gradlew assembleDebug"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor-community/text-to-speech": "^8.0.2",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.duniaceria.anak",
+  "appName": "Dunia Ceria",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#FFF6E0"
+  }
+}

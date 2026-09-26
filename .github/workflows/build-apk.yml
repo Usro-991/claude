@@ -1,0 +1,59 @@
+name: Build APK Android
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Pasang dependensi
+        run: npm ci
+
+      - name: Cek kode web
+        run: npm run check
+
+      - name: Salin aset web ke proyek Android
+        run: npm run sync
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Ganti nama APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk DuniaCeria.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DuniaCeria-apk
+          path: DuniaCeria.apk
+
+      - name: Rilis (hanya untuk tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: DuniaCeria.apk

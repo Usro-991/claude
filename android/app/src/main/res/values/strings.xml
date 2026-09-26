@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dunia Ceria</string>
+    <string name="title_activity_main">Dunia Ceria</string>
+    <string name="package_name">com.duniaceria.anak</string>
+    <string name="custom_url_scheme">com.duniaceria.anak</string>
+</resources>
