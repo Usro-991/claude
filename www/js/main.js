@@ -3,7 +3,7 @@
 
 const APP_NAME = 'Belajar bersama Zayn';
 const APP_AUTHOR = 'Rizky Muhammad';
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 
 function waktu() {
   const jam = new Date().getHours();
@@ -134,15 +134,16 @@ Screens['parent'] = (root) => {
       h('label', { class: 'field-label', for: 'child-name' }, 'Nama panggilan anak'),
       Object.assign(nameInput, { id: 'child-name' }),
       h('p', { class: 'muted' }, 'Zayn akan sesekali memanggil anak dengan nama ini, misalnya "Pintar sekali, Aisyah!"')),
-    check('Suara Zayn', 'voice'),
+    h('button', { class: 'setting-link', onclick: () => go('voice-settings') },
+      h('span', { class: 'rec-hero-ic' }, icon('mic', 26)),
+      h('span', { class: 'setting-link-text' },
+        h('b', null, 'Suara Zayn'),
+        h('span', { class: 'muted' }, 'Pilih suara yang paling alami, atau rekam suara Ayah/Bunda sendiri')),
+      icon('next', 24)),
+    check('Suara Zayn aktif', 'voice'),
     check('Efek suara', 'sound'),
-    range('Kecepatan bicara', 'rate', 0.6, 1.2, 0.05, (v) => Math.round(v * 100) + '%'),
     range('Jeda saat berhitung (makin besar makin pelan)', 'slow', 0.7, 2, 0.1, (v) => v.toFixed(1) + '×'),
-    h('div', { class: 'row' },
-      h('button', { class: 'btn ghost', onclick: () => speak(sapa('Halo! Aku Zayn. Satu, dua, tiga. Ayo belajar!', 1)) }, icon('sound', 22), 'Tes suara'),
-      h('button', { class: 'btn ghost', onclick: () => sayArab('أَلِف، بَاء، تَاء', 'Alif, Ba, Ta') }, icon('sound', 22), 'Tes suara Arab')),
     status,
-    h('p', { class: 'muted' }, 'Kalau huruf hijaiyah tidak bersuara: buka Pengaturan HP → Sistem → Bahasa & input → Output text-to-speech → Google → Instal data suara → pilih Arab.'),
     h('div', { class: 'field row-field' }, h('span', null, 'Bintang terkumpul'), h('b', null, stars)),
     h('button', { class: 'btn warm', onclick: () => { stars = 0; Store.set('stars', 0); go('parent', {}, { replace: true }); } }, 'Atur ulang bintang'),
     h('div', { class: 'about' },

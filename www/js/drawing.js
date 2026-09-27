@@ -304,7 +304,7 @@ Screens['trace'] = (root, { set = 'angka', i = 0 }) => {
   board.state.size = SIZES[2];
   board.state.color = '#FF4B4B';
   const nav = (d) => go('trace', { set, i: (i + d + S.items.length) % S.items.length }, { replace: true });
-  const say = () => (S.arab ? sayArab(HIJAIYAH[i].say, 'Tulis huruf ' + HIJAIYAH[i].name) : speak(S.say(text)));
+  const say = () => (S.arab ? sayLetter(i, 'Tulis huruf ' + HIJAIYAH[i].name) : speak(S.say(text)));
   const [colors, tools] = drawToolbar(board, {
     extra: [
       h('button', { class: 'tool ok', 'aria-label': 'Selesai', onclick: () => { Sfx.good(); confetti(20); addStar(); speak(sapa(line('trace-ok', ['Wah, rapi sekali tulisanmu!', 'Bagus! Tanganmu makin pintar menulis.', 'Hebat! Mau coba huruf berikutnya?']))); } }, icon('check')),

@@ -43,7 +43,7 @@ async function countAlong(els, tok, { wordEl, start = 1, delay = 1000 } = {}) {
     tag.textContent = n;
     if (wordEl) wordEl.textContent = numWord(n);
     Sfx.count(n);
-    await Promise.all([speak(cap(numWord(n)) + '.', 'id-ID', 1, { show: cap(numWord(n)) + '…' }), sleep(step(delay))]);
+    await Promise.all([speak(cap(numWord(n)) + '.', 'id-ID', 1, { show: cap(numWord(n)) + '…', key: numKey(n) }), sleep(step(delay))]);
     el.classList.remove('now');
   }
   return alive(tok);
@@ -210,7 +210,7 @@ Screens['count-tap'] = (root, params, tok) => {
         e.append(h('span', { class: 'tag' }, counted));
         wordEl.textContent = numWord(counted);
         Sfx.count(counted);
-        speak(cap(numWord(counted)) + '.', 'id-ID', 1, { show: cap(numWord(counted)) + '…' });
+        speak(cap(numWord(counted)) + '.', 'id-ID', 1, { show: cap(numWord(counted)) + '…', key: numKey(counted) });
         if (counted === n) {
           await sleep(step(1100));
           if (!alive(tok)) return;
@@ -381,7 +381,7 @@ Screens['count-sub'] = (root, params, tok) => {
         taken[i].classList.add('gone');
         Sfx.pop();
         wordEl.textContent = verb + ' ' + numWord(i + 1);
-        await Promise.all([speak(cap(numWord(i + 1)) + '.'), sleep(step(1000))]);
+        await Promise.all([speak(cap(numWord(i + 1)) + '.', 'id-ID', 1, { key: numKey(i + 1) }), sleep(step(1000))]);
       }
       await Promise.all([speak('Sekarang kita hitung yang masih ada.'), sleep(step(1100))]);
       if (!(await countAlong(els.slice(0, res), tok, { wordEl, delay: 900 }))) { helping = false; return; }
@@ -437,7 +437,7 @@ Screens['count-order'] = (root, params, tok) => {
         await speak('Kita baca sama-sama, ya.');
         for (let i = 0; i < seq.length; i++) {
           cells[i].classList.add('lit');
-          await Promise.all([speak(cap(numWord(seq[i])) + '.'), sleep(step(650))]);
+          await Promise.all([speak(cap(numWord(seq[i])) + '.', 'id-ID', 1, { key: numKey(seq[i]) }), sleep(step(650))]);
           if (!alive(tok)) return;
         }
         await sleep(step(500), tok) && round();

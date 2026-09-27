@@ -54,7 +54,7 @@ const Store = {
 };
 
 const Settings = Object.assign(
-  { rate: 0.9, sound: true, voice: true, slow: 1, childName: '' },
+  { rate: 0.9, pitch: 1, sound: true, voice: true, slow: 1, childName: '', voiceId: '', voiceAr: '', useRec: true },
   Store.get('settings', {})
 );
 function saveSettings() { Store.set('settings', Settings); }
@@ -66,9 +66,95 @@ function sleep(ms, tok) {
   return new Promise((res) => setTimeout(() => res(tok == null || alive(tok)), ms));
 }
 
+/* ---------- Rekaman suara sendiri (disimpan di IndexedDB) ----------
+ * Kunci rekaman: 'num:3', 'hij:0', 'praise:2', 'gentle:1', dst.
+ * Bila rekaman ada, rekaman itu yang diputar, menggantikan suara mesin.
+ */
+const Rec = (() => {
+  const keys = new Set();
+  let dbp = null;
+  function db() {
+    if (dbp) return dbp;
+    dbp = new Promise((resolve) => {
+      try {
+        const req = indexedDB.open('zayn-voice', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('clips');
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+      } catch (e) { resolve(null); }
+    });
+    return dbp;
+  }
+  async function tx(mode, fn) {
+    const d = await db();
+    if (!d) return null;
+    return new Promise((resolve) => {
+      try {
+        const t = d.transaction('clips', mode);
+        const r = fn(t.objectStore('clips'));
+        t.oncomplete = () => resolve(r && 'result' in r ? r.result : null);
+        t.onerror = () => resolve(null);
+      } catch (e) { resolve(null); }
+    });
+  }
+  const ready = tx('readonly', (st) => st.getAllKeys()).then((all) => { (all || []).forEach((k) => keys.add(k)); });
+  return {
+    ready,
+    has: (k) => keys.has(k),
+    count: (prefix) => [...keys].filter((k) => k.startsWith(prefix)).length,
+    list: (prefix) => [...keys].filter((k) => k.startsWith(prefix)),
+    get: (k) => tx('readonly', (st) => st.get(k)),
+    async set(k, blob) { await tx('readwrite', (st) => st.put(blob, k)); keys.add(k); },
+    async del(k) { await tx('readwrite', (st) => st.delete(k)); keys.delete(k); },
+  };
+})();
+
+let currentAudio = null;
+/** Putar rekaman; resolve saat selesai (atau gagal). */
+async function playClip(key) {
+  const blob = await Rec.get(key);
+  if (!blob) return false;
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(blob);
+    const a = new Audio(url);
+    currentAudio = a;
+    const done = () => { URL.revokeObjectURL(url); if (currentAudio === a) currentAudio = null; resolve(true); };
+    a.onended = done;
+    a.onerror = done;
+    a.onpause = done;
+    a.play().catch(done);
+  });
+}
+
 /* ---------- Text-to-speech ---------- */
 const TTS = (window.capacitorTextToSpeech && window.capacitorTextToSpeech.TextToSpeech) || null;
 const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+/** Daftar suara yang tersedia di HP/browser (dipakai untuk memilih suara yang paling enak didengar). */
+let voiceList = [];
+async function loadVoices() {
+  try {
+    if (TTS && isNative) voiceList = (await TTS.getSupportedVoices()).voices || [];
+    else if ('speechSynthesis' in window) voiceList = speechSynthesis.getVoices();
+  } catch (e) { voiceList = []; }
+  return voiceList;
+}
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => { if (!isNative) voiceList = speechSynthesis.getVoices(); };
+loadVoices();
+
+function voicesFor(lang) {
+  const base = lang.slice(0, 2).toLowerCase();
+  return voiceList
+    .map((v, index) => ({ v, index }))
+    .filter(({ v }) => (v.lang || '').toLowerCase().replace('_', '-').startsWith(base));
+}
+/** Indeks suara pilihan orang tua untuk bahasa ini, atau -1 bila memakai bawaan HP. */
+function chosenVoice(lang) {
+  const uri = lang.startsWith('ar') ? Settings.voiceAr : Settings.voiceId;
+  if (!uri) return -1;
+  const hit = voicesFor(lang).find(({ v }) => v.voiceURI === uri || v.name === uri);
+  return hit ? hit.index : -1;
+}
 
 function webSpeak(text, lang, rate) {
   return new Promise((resolve) => {
@@ -76,10 +162,9 @@ function webSpeak(text, lang, rate) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = lang;
     u.rate = rate;
-    u.pitch = 1.05;
-    const voices = speechSynthesis.getVoices();
-    const base = lang.slice(0, 2);
-    const v = voices.find((x) => x.lang === lang) || voices.find((x) => x.lang && x.lang.startsWith(base));
+    u.pitch = Settings.pitch;
+    const idx = chosenVoice(lang);
+    const v = idx >= 0 ? voiceList[idx] : (voicesFor(lang)[0] || {}).v;
     if (v) u.voice = v;
     let done = false;
     const finish = () => { if (!done) { done = true; resolve(); } };
@@ -103,19 +188,26 @@ function caption(text, talking) {
  * Ucapkan teks. lang: 'id-ID' (bawaan) atau 'ar-SA' untuk bahasa Arab.
  * Selalu resolve (tidak pernah gagal), sehingga urutan animasi tetap berjalan tanpa suara.
  * opts.show: teks untuk gelembung (bawaan: teks yang diucapkan), false = gelembung tidak diubah.
+ * opts.key: kunci rekaman suara orang tua; bila ada, rekaman itu yang diputar.
  */
 async function speak(text, lang = 'id-ID', rateMul = 1, opts = {}) {
   if (!text) return;
   const show = opts.show === undefined ? text : opts.show;
   if (show !== false) caption(show, Settings.voice);
   if (!Settings.voice) return;
-  const rate = Math.max(0.3, Settings.rate * rateMul);
+  stopSpeak();
   try {
+    if (opts.key && Settings.useRec && Rec.has(opts.key)) {
+      await playClip(opts.key);
+      return;
+    }
+    const rate = Math.max(0.3, Settings.rate * rateMul);
     if (TTS && isNative) {
-      await TTS.stop().catch(() => {});
-      await TTS.speak({ text, lang, rate, pitch: 1.05, volume: 1, category: 'playback', queueStrategy: 0 });
+      const voice = chosenVoice(lang);
+      const o = { text, lang, rate, pitch: Settings.pitch, volume: 1, category: 'playback', queueStrategy: 0 };
+      if (voice >= 0) o.voice = voice;
+      await TTS.speak(o);
     } else {
-      if ('speechSynthesis' in window) speechSynthesis.cancel();
       await webSpeak(text, lang, rate);
     }
   } catch (e) {
@@ -126,12 +218,13 @@ async function speak(text, lang = 'id-ID', rateMul = 1, opts = {}) {
 }
 function stopSpeak() {
   try {
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     if (TTS && isNative) TTS.stop().catch(() => {});
     else if ('speechSynthesis' in window) speechSynthesis.cancel();
   } catch (e) { /* abaikan */ }
 }
-// Beberapa browser memuat daftar suara secara asinkron
-if ('speechSynthesis' in window) speechSynthesis.getVoices();
+/** Kunci rekaman untuk angka (hanya 1–20 yang bisa direkam). */
+const numKey = (n) => (n >= 0 && n <= 20 ? 'num:' + n : undefined);
 
 /* ---------- Efek suara (tanpa file, dibuat dengan WebAudio) ---------- */
 let audioCtx = null;
@@ -207,8 +300,22 @@ const GENTLE = [
   'Tidak apa-apa, salah itu biasa. Ayo coba lagi.', 'Eits, bukan yang itu. Pelan-pelan saja.',
   'Coba perhatikan baik-baik, ya.', 'Belum tepat, tapi kamu sudah berani mencoba. Ayo sekali lagi!',
 ];
-const praise = () => sapa(line('praise', PRAISE));
-const gentle = () => line('gentle', GENTLE);
+/**
+ * Pilih kalimat dari daftar. Kalau orang tua sudah merekam beberapa kalimat,
+ * yang terekam diutamakan supaya anak lebih sering mendengar suara asli.
+ * Mengembalikan [teks, kunciRekaman].
+ */
+function pickLine(group, list) {
+  const recorded = Settings.useRec ? list.map((t, i) => i).filter((i) => Rec.has(group + ':' + i)) : [];
+  if (recorded.length) {
+    const i = recorded.length > 1 ? recorded.filter((k) => k !== recent[group])[rand(recorded.length - 1)] : recorded[0];
+    recent[group] = i;
+    return [list[i], group + ':' + i];
+  }
+  return [line(group, list), undefined];
+}
+const praise = () => { const [t, key] = pickLine('praise', PRAISE); return key ? [t, key] : [sapa(t), undefined]; };
+const gentle = () => pickLine('gentle', GENTLE);
 
 /* ---------- Efek perayaan ---------- */
 const COLORS = ['#FF7A59', '#FFC53D', '#34C3A0', '#4DA3FF', '#8C7CFF', '#FF7EB6'];
@@ -232,7 +339,7 @@ function confetti(n = 36) {
   }
 }
 async function celebrate(text, { star = true, say = true } = {}) {
-  const spoken = text || praise();
+  const [spoken, key] = text ? [text, undefined] : praise();
   Sfx.good();
   confetti();
   const badge = h('div', { class: 'cheer' },
@@ -241,11 +348,13 @@ async function celebrate(text, { star = true, say = true } = {}) {
   $fx.append(badge);
   setTimeout(() => badge.remove(), 1500);
   if (star) addStar();
-  if (say) await speak(spoken);
+  if (say) await speak(spoken, 'id-ID', 1, { key });
 }
 async function tryAgain(say) {
   Sfx.soft();
-  await speak(say || gentle());
+  if (say) return speak(say);
+  const [t, key] = gentle();
+  await speak(t, 'id-ID', 1, { key });
 }
 
 /* ---------- Navigasi ---------- */

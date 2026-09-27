@@ -230,9 +230,9 @@ Screens['memory'] = (root, params, tok) => {
 
 /* ================= Pecah balon (untuk si kecil) ================= */
 const BALLOON_MODES = {
-  angka: () => { const n = rand(10) + 1; return [String(n), () => speak(cap(numWord(n)) + '!', 'id-ID', 1, { show: String(n) + ' — ' + numWord(n) })]; },
+  angka: () => { const n = rand(10) + 1; return [String(n), () => speak(cap(numWord(n)) + '!', 'id-ID', 1, { show: String(n) + ' — ' + numWord(n), key: numKey(n) })]; },
   huruf: () => { const [L, w] = pick(ABC); return [L, () => speak(cap(ABC_SAY[L]) + ', ' + w.toLowerCase() + '.', 'id-ID', 1, { show: L + ' — ' + w })]; },
-  hijaiyah: () => { const L = pick(HIJAIYAH); return [L.ch, () => sayArab(L.say, L.ch + ' — ' + L.name), true]; },
+  hijaiyah: () => { const i = rand(HIJAIYAH.length); const L = HIJAIYAH[i]; return [L.ch, () => sayLetter(i, L.ch + ' — ' + L.name), true]; },
   warna: () => ['', null],
 };
 

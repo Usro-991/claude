@@ -2,7 +2,11 @@
 'use strict';
 
 /** Ucapkan teks Arab; gelembung menampilkan nama latin bila diberikan. */
-const sayArab = (text, show) => speak(text, 'ar-SA', 0.9, { show: show === undefined ? text : show });
+const sayArab = (text, show, key) => speak(text, 'ar-SA', 0.9, { show: show === undefined ? text : show, key });
+/** Ucapkan nama huruf hijaiyah ke-i (memakai rekaman orang tua bila ada). */
+/** Ucapkan huruf ke-i dengan harakat k (0 fathah, 1 kasrah, 2 dhammah). */
+const sayHarakat = (i, k) => sayArab(harakatOf(HIJAIYAH[i])[k], harakatLatin(HIJAIYAH[i])[k], 'har:' + i + ':' + k);
+const sayLetter = (i, show) => sayArab(HIJAIYAH[i].say, show === undefined ? HIJAIYAH[i].name : show, 'hij:' + i);
 
 Screens['hijaiyah-menu'] = (root) => {
   root.append(topbar('Huruf Hijaiyah'), coach(''), menuGrid([
@@ -43,14 +47,14 @@ Screens['hijaiyah-detail'] = (root, { i = 0, auto = false }, tok) => {
   const name = h('div', { class: 'letter-name' }, L.name);
   const forms = h('div', { class: 'forms' });
   letterForms(L.ch).forEach(([label, ch]) => {
-    forms.append(h('button', { class: 'f', onclick: () => sayArab(L.say, L.name + ' di ' + label.toLowerCase()) },
+    forms.append(h('button', { class: 'f', onclick: () => sayLetter(i, L.name + ' di ' + label.toLowerCase()) },
       h('div', { class: 'ch arab' }, ch), h('div', { class: 'lat' }, label)));
   });
   const har = h('div', { class: 'harakat-row' });
   if (!L.noHarakat) {
     const lat = harakatLatin(L);
     harakatOf(L).forEach((ch, k) => {
-      har.append(h('button', { class: 'choice har', onclick: () => { Sfx.tap(); sayArab(ch, lat[k]); } },
+      har.append(h('button', { class: 'choice har', onclick: () => { Sfx.tap(); sayHarakat(i, k); } },
         h('div', { class: 'ch arab' }, ch), h('div', { class: 'lat' }, lat[k])));
     });
   }
@@ -79,7 +83,7 @@ Screens['hijaiyah-detail'] = (root, { i = 0, auto = false }, tok) => {
     await Promise.all([speak(opener), sleep(600)]);
     if (!alive(tok)) return false;
     hero.classList.remove('pulse'); void hero.offsetWidth; hero.classList.add('pulse');
-    await Promise.all([sayArab(L.say, L.name), sleep(step(1300))]);
+    await Promise.all([sayLetter(i), sleep(step(1300))]);
     if (!alive(tok)) return false;
     if (!auto) {
       await Promise.all([speak(line('hij-repeat', ['Ayo tirukan. ' + L.name + '.', 'Coba ucapkan, ' + L.name + '.', 'Ikuti, ya. ' + L.name + '.'])), sleep(step(1600))]);
@@ -94,7 +98,7 @@ Screens['hijaiyah-detail'] = (root, { i = 0, auto = false }, tok) => {
       for (let k = 0; k < chs.length; k++) {
         if (!alive(tok)) return false;
         btns[k].classList.add('lit');
-        await Promise.all([sayArab(chs[k], lat[k]), sleep(step(1100))]);
+        await Promise.all([sayHarakat(i, k), sleep(step(1100))]);
         btns[k].classList.remove('lit');
       }
     }
@@ -135,7 +139,7 @@ Screens['hijaiyah-harakat'] = (root, params, tok) => {
     letters.forEach((L) => {
       const ch = harakatOf(L)[mode];
       const lat = harakatLatin(L)[mode];
-      grid.append(h('button', { class: 'letter-card', onclick: () => { Sfx.tap(); sayArab(ch, lat); } },
+      grid.append(h('button', { class: 'letter-card', onclick: () => { Sfx.tap(); sayHarakat(HIJAIYAH.indexOf(L), mode); } },
         h('span', { class: 'ch arab' }, ch), h('span', { class: 'lat' }, lat)));
     });
   };
@@ -149,7 +153,7 @@ Screens['hijaiyah-harakat'] = (root, params, tok) => {
     for (let k = 0; k < cards.length && playing && alive(tok); k++) {
       cards[k].scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
       cards[k].classList.add('lit');
-      await Promise.all([sayArab(harakatOf(letters[k])[mode], harakatLatin(letters[k])[mode]), sleep(step(1300))]);
+      await Promise.all([sayHarakat(HIJAIYAH.indexOf(letters[k]), mode), sleep(step(1300))]);
       cards[k].classList.remove('lit');
     }
     playing = false;
@@ -183,7 +187,7 @@ Screens['hijaiyah-quiz'] = (root, params, tok) => {
     body.innerHTML = '';
     const ask = async () => {
       await speak(line('hij-ask', ['Coba cari huruf', 'Mana huruf', 'Yang mana huruf']), 'id-ID', 1, { show: 'Mana huruf ' + target.name + '?' });
-      if (alive(tok)) await sayArab(target.say, 'Mana huruf ' + target.name + '?');
+      if (alive(tok)) await sayLetter(HIJAIYAH.indexOf(target), 'Mana huruf ' + target.name + '?');
     };
     const row = h('div', { class: 'choices', style: { direction: 'rtl' } });
     let busy = false;
@@ -194,7 +198,7 @@ Screens['hijaiyah-quiz'] = (root, params, tok) => {
         busy = true;
         if (L === target) {
           b.classList.add('right');
-          await sayArab(L.say, L.name);
+          await sayLetter(HIJAIYAH.indexOf(L));
           await celebrate();
           await sleep(step(600), tok) && round();
         } else {
@@ -202,7 +206,7 @@ Screens['hijaiyah-quiz'] = (root, params, tok) => {
           setTimeout(() => b.classList.remove('wrong'), 500);
           Sfx.soft();
           await speak('Hmm, yang itu huruf', 'id-ID', 1, { show: 'Itu huruf ' + L.name });
-          await sayArab(L.say, 'Itu huruf ' + L.name);
+          await sayLetter(HIJAIYAH.indexOf(L), 'Itu huruf ' + L.name);
           await sleep(300);
           if (alive(tok)) await speak('Coba dengarkan lagi, ya.');
           if (alive(tok)) await ask();

@@ -905,3 +905,97 @@ input[type=range] { width: 100%; accent-color: var(--brand); height: 32px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ============ Suara & rekaman (menu orang tua) ============ */
+.panel + .panel { margin-top: 14px; }
+.setting-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--surface-2);
+  text-align: left;
+}
+.setting-link-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.rec-hero { display: flex; gap: 14px; align-items: flex-start; }
+.rec-hero-ic {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: #FFE4DC;
+  color: var(--brand-deep);
+  display: grid;
+  place-items: center;
+}
+.voice-list { display: flex; flex-direction: column; gap: 8px; }
+.voice-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 18px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 2px transparent;
+}
+.voice-row.on { background: #E6F7F0; box-shadow: inset 0 0 0 2px var(--mint); }
+.voice-pick { flex: 1; display: flex; align-items: center; gap: 10px; min-height: 48px; text-align: left; font-size: 16px; }
+.radio { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #CFC3B3; background: #fff; }
+.voice-row.on .radio { border-color: var(--mint); box-shadow: inset 0 0 0 4px #fff; background: var(--mint); }
+.rec-tip {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: #EAF3FF;
+  color: #24518A;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+.rec-tip > div:nth-child(2) { flex: 1; }
+.rec-progress { flex: none; font-family: var(--font-display); font-size: 17px; }
+.rec-list { display: flex; flex-direction: column; gap: 8px; }
+.rec-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+.rec-row.recording { box-shadow: 0 0 0 3px var(--bad); }
+.rec-badge {
+  flex: none;
+  min-width: 52px;
+  height: 52px;
+  padding: 0 6px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+}
+.rec-badge.arab { font-family: var(--font-arab); font-size: 28px; line-height: 1; padding-bottom: 6px; }
+.rec-text { flex: 1; min-width: 0; font-size: 17px; display: flex; align-items: center; gap: 6px; }
+.rec-check { display: none; color: var(--mint); }
+.rec-row.done .rec-check { display: inline-flex; }
+.rec-btn {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bad);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 0 #C8433C;
+}
+.rec-row.recording .rec-btn { animation: pulseRec 1s infinite; }
+@keyframes pulseRec { 0%, 100% { box-shadow: 0 4px 0 #C8433C, 0 0 0 0 rgba(242, 92, 84, .5); } 50% { box-shadow: 0 4px 0 #C8433C, 0 0 0 10px rgba(242, 92, 84, 0); } }
+.icon-btn:disabled { opacity: .35; pointer-events: none; }

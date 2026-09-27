@@ -36,6 +36,18 @@ Setiap jawaban benar memberi ⭐ bintang dan efek konfeti.
 isi **nama panggilan anak**, nyalakan/matikan suara, atur kecepatan bicara, atur jeda berhitung supaya lebih pelan,
 dan uji suara Indonesia/Arab.
 
+## Suara Zayn: supaya tidak kaku
+
+Buka **Menu Orang Tua → Suara Zayn**. Ada dua cara:
+
+1. **Rekam suara sendiri** (paling alami). Ayah atau Bunda bisa merekam angka 1–20, 30 nama huruf hijaiyah,
+   harakat a-i-u, kalimat pujian, dan kalimat penyemangat. Setiap rekaman langsung dipakai menggantikan
+   suara mesin. Kalimat yang belum direkam tetap dibacakan oleh suara mesin. Rekaman disimpan di HP saja
+   dan tidak dikirim ke mana pun.
+2. **Pilih suara mesin terbaik**. Daftar semua suara Indonesia dan Arab yang ada di HP bisa didengarkan
+   satu per satu. Suara bertanda *"lebih halus, perlu internet"* biasanya paling mirip manusia.
+   Kecepatan dan tinggi suara juga bisa diatur.
+
 ## Cara mendapatkan APK
 
 APK dibangun otomatis oleh **GitHub Actions** setiap kali ada push:
