@@ -1,4 +1,4 @@
-/* Dunia Ceria — Menggambar bebas & menebalkan huruf/angka di layar sentuh */
+/* Belajar bersama Zayn — Menggambar bebas & menebalkan huruf/angka di layar sentuh */
 'use strict';
 
 const PALETTE = [
@@ -182,9 +182,9 @@ function drawToolbar(board, { extra = [] } = {}) {
     }, h('span', { class: 'dot', style: { width: Math.max(8, s * 0.9) + 'px', height: Math.max(8, s * 0.9) + 'px' } })));
   });
   tools.append(
-    h('button', { class: 'tool', 'data-t': 'eraser', onclick: () => { Sfx.tap(); board.state.tool = 'eraser'; refresh(); } }, '🧽'),
-    h('button', { class: 'tool', onclick: () => { Sfx.tap(); board.undo(); } }, '↩️'),
-    h('button', { class: 'tool', onclick: () => { Sfx.pop(); board.clear(); speak('Bersih lagi'); } }, '🗑️'),
+    h('button', { class: 'tool', 'data-t': 'eraser', 'aria-label': 'Penghapus', onclick: () => { Sfx.tap(); board.state.tool = 'eraser'; refresh(); } }, icon('eraser')),
+    h('button', { class: 'tool', 'aria-label': 'Batal', onclick: () => { Sfx.tap(); board.undo(); } }, icon('undo')),
+    h('button', { class: 'tool', 'aria-label': 'Hapus semua', onclick: () => { Sfx.pop(); board.clear(); speak(line('clear', ['Bersih lagi. Mau gambar apa sekarang?', 'Oke, kertasnya sudah bersih.'])); } }, icon('trash')),
     ...extra
   );
   STAMPS.forEach((st) => {
@@ -203,22 +203,27 @@ function saveToGallery(board) {
   while (list.length > 12) list.pop();
   Store.set('gallery', list);
   celebrate('Tersimpan!', { star: true, say: false });
-  speak('Gambarmu sudah disimpan. Bagus sekali!');
+  speak(sapa(line('saved', ['Gambarmu sudah disimpan. Bagus sekali!', 'Sudah disimpan. Nanti bisa dilihat lagi di galeri, ya.', 'Wah, bagus. Aku simpan, ya.'])));
 }
 
 /* ================= Menggambar bebas ================= */
 Screens['draw'] = (root) => {
-  root.append(topbar('Menggambar 🎨'));
+  root.append(topbar('Menggambar'));
   const wrap = h('div', { class: 'draw-wrap' });
   root.append(wrap);
   const board = DrawingBoard(wrap);
   const [colors, tools] = drawToolbar(board, {
     extra: [
-      h('button', { class: 'tool', onclick: () => saveToGallery(board) }, '💾'),
-      h('button', { class: 'tool', onclick: () => go('gallery') }, '🖼️'),
+      h('button', { class: 'tool', 'aria-label': 'Simpan', onclick: () => saveToGallery(board) }, icon('save')),
+      h('button', { class: 'tool', 'aria-label': 'Galeri', onclick: () => go('gallery') }, icon('image')),
     ],
   });
   wrap.append(colors, tools);
+  speak(line('draw', [
+    'Silakan menggambar pakai jarimu. Pilih warna yang kamu suka.',
+    'Mau gambar apa hari ini? Rumah, kucing, atau pelangi?',
+    'Ayo menggambar! Tidak ada yang salah, bebas saja.',
+  ]));
   return () => board.destroy();
 };
 
@@ -226,7 +231,7 @@ Screens['gallery'] = (root) => {
   root.append(topbar('Galeri Gambarku'));
   const list = Store.get('gallery', []);
   if (!list.length) {
-    root.append(h('div', { class: 'center' }, h('div', { style: { fontSize: '80px' } }, '🖼️'), h('p', { class: 'hint' }, 'Belum ada gambar. Ayo menggambar lalu tekan 💾')));
+    root.append(h('div', { class: 'center' }, art('draw', 120), h('p', { class: 'hint' }, 'Belum ada gambar. Yuk menggambar dulu, lalu tekan tombol simpan.')));
     return;
   }
   const g = h('div', { class: 'gallery' });
@@ -234,22 +239,22 @@ Screens['gallery'] = (root) => {
     g.append(h('div', null,
       h('img', { src, alt: 'gambar ' + (i + 1) }),
       h('button', {
-        class: 'tool', style: { margin: '6px auto 0' },
+        class: 'tool', 'aria-label': 'Hapus gambar', style: { margin: '8px auto 0' },
         onclick: () => {
           const l = Store.get('gallery', []);
           l.splice(i, 1);
           Store.set('gallery', l);
           go('gallery', {}, { replace: true });
         },
-      }, '🗑️')));
+      }, icon('trash'))));
   });
   root.append(g);
 };
 
 /* ================= Menebalkan (tracing) ================= */
 const TRACE_SETS = {
-  angka: { title: 'Menulis Angka', items: '0123456789'.split(''), say: (x) => 'angka ' + numWord(+x) },
-  abc: { title: 'Menulis Huruf ABC', items: ABC.map((x) => x[0]), say: (x) => 'huruf ' + ABC_SAY[x], lower: true },
+  angka: { title: 'Menulis Angka', items: '0123456789'.split(''), say: (x) => 'Ayo tulis angka ' + numWord(+x) + '. Ikuti garisnya pelan-pelan.' },
+  abc: { title: 'Menulis Huruf ABC', items: ABC.map((x) => x[0]), say: (x) => 'Ini huruf ' + ABC_SAY[x] + ', besar dan kecil. Ayo tebalkan.', lower: true },
   hijaiyah: { title: 'Menulis Hijaiyah', items: HIJAIYAH.map((x) => x.ch), arab: true },
 };
 
@@ -257,10 +262,10 @@ function traceTemplate(text, arab) {
   return (c, w, hh) => {
     const size = Math.min(w * (text.length > 1 ? 0.45 : 0.75), hh * 0.8);
     c.save();
-    c.font = `${arab ? '' : 'bold '}${size}px ${arab ? '"Amiri", "Noto Naskh Arabic", serif' : '"Comic Sans MS", "Nunito", sans-serif'}`;
+    c.font = `${arab ? '700 ' : '600 '}${size}px ${arab ? '"Noto Naskh Arabic", serif' : '"Fredoka", sans-serif'}`;
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillStyle = '#F1ECE4';
+    c.fillStyle = '#F4EEE6';
     c.fillText(text, w / 2, hh / 2 + (arab ? size * 0.05 : size * 0.04));
     c.setLineDash([size / 22, size / 26]);
     c.lineWidth = Math.max(3, size / 70);
@@ -271,7 +276,7 @@ function traceTemplate(text, arab) {
 }
 
 Screens['trace-pick'] = (root, { set = 'angka' }) => {
-  root.append(topbar('Menulis'));
+  root.append(topbar('Menulis'), coach(''));
   let cur = set;
   const grid = h('div', { class: 'letter-grid ltr' });
   const render = () => {
@@ -283,33 +288,34 @@ Screens['trace-pick'] = (root, { set = 'angka' }) => {
     });
   };
   root.append(segmented([['angka', '123'], ['abc', 'ABC'], ['hijaiyah', 'ا ب ت']], cur, (v) => { cur = v; render(); }),
-    h('p', { class: 'hint' }, 'Pilih, lalu tebalkan garis putus-putus dengan jarimu ✍️'), grid);
+    grid);
   render();
+  speak('Pilih satu, lalu tebalkan garis putus-putusnya pakai jari, ya.');
 };
 
 Screens['trace'] = (root, { set = 'angka', i = 0 }) => {
   const S = TRACE_SETS[set];
   const text = S.items[i];
   const shown = S.lower ? text + text.toLowerCase() : text;
-  root.append(topbar(S.title, { sayTitle: false }));
+  root.append(topbar(S.title));
   const wrap = h('div', { class: 'draw-wrap' });
   root.append(wrap);
   const board = DrawingBoard(wrap, { template: traceTemplate(shown, S.arab) });
   board.state.size = SIZES[2];
   board.state.color = '#FF4B4B';
   const nav = (d) => go('trace', { set, i: (i + d + S.items.length) % S.items.length }, { replace: true });
-  const say = () => (S.arab ? sayArab(HIJAIYAH[i].say) : speak(S.say(text)));
+  const say = () => (S.arab ? sayArab(HIJAIYAH[i].say, 'Tulis huruf ' + HIJAIYAH[i].name) : speak(S.say(text)));
   const [colors, tools] = drawToolbar(board, {
     extra: [
-      h('button', { class: 'tool', onclick: () => { Sfx.good(); confetti(20); addStar(); speak('Hebat! Tulisanmu bagus'); } }, '✅'),
-      h('button', { class: 'tool', onclick: say }, '🔊'),
-      h('button', { class: 'tool', onclick: () => saveToGallery(board) }, '💾'),
+      h('button', { class: 'tool ok', 'aria-label': 'Selesai', onclick: () => { Sfx.good(); confetti(20); addStar(); speak(sapa(line('trace-ok', ['Wah, rapi sekali tulisanmu!', 'Bagus! Tanganmu makin pintar menulis.', 'Hebat! Mau coba huruf berikutnya?']))); } }, icon('check')),
+      h('button', { class: 'tool', 'aria-label': 'Dengarkan', onclick: say }, icon('sound')),
+      h('button', { class: 'tool', 'aria-label': 'Simpan', onclick: () => saveToGallery(board) }, icon('save')),
     ],
   });
   wrap.append(h('div', { class: 'pager', style: { justifyContent: 'center' } },
-    h('button', { class: 'round-btn', onclick: () => nav(-1) }, '⬅'),
+    h('button', { class: 'icon-btn', 'aria-label': 'Sebelumnya', onclick: () => nav(-1) }, icon('back', 28)),
     h('div', { class: 'count' }, (i + 1) + ' / ' + S.items.length),
-    h('button', { class: 'round-btn', onclick: () => nav(1) }, '➡')), colors, tools);
+    h('button', { class: 'icon-btn', 'aria-label': 'Berikutnya', onclick: () => nav(1) }, icon('next', 28))), colors, tools);
   say();
   return () => board.destroy();
 };

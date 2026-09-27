@@ -1,8 +1,8 @@
 {
-  "name": "dunia-ceria-anak",
-  "version": "1.0.0",
+  "name": "belajar-bersama-zayn",
+  "version": "1.1.0",
   "private": true,
-  "description": "Aplikasi belajar & bermain untuk anak usia 1-7 tahun: berhitung, huruf hijaiyah, menggambar, dan lainnya.",
+  "description": "Belajar bersama Zayn: aplikasi belajar anak usia 1-7 tahun. Dikembangkan oleh Rizky Muhammad.",
   "scripts": {
     "vendor": "node scripts/copy-vendor.js",
     "serve": "npx --yes http-server www -p 8080 -c-1",
@@ -19,5 +19,6 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2"
-  }
+  },
+  "author": "Rizky Muhammad"
 }

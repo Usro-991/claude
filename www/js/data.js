@@ -1,4 +1,4 @@
-/* Dunia Ceria — data belajar */
+/* Belajar bersama Zayn — data belajar */
 'use strict';
 
 /* ---------- Angka ---------- */

@@ -1,4 +1,4 @@
-package com.duniaceria.anak;
+package com.rizkymuhammad.belajarzayn;
 
 import com.getcapacitor.BridgeActivity;
 

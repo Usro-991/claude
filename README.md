@@ -1,8 +1,15 @@
-# Dunia Ceria 🌟
+# Belajar bersama Zayn
 
 Aplikasi Android untuk belajar sambil bermain, untuk anak usia **1–7 tahun**.
-Tanpa iklan, tanpa internet, dan tanpa login. Tombolnya besar, setiap layar bersuara, dan
-anak tidak pernah "kalah": kalau jawabannya salah, aplikasi mengajak menghitung ulang pelan-pelan.
+Dikembangkan oleh **Rizky Muhammad**.
+
+Anak ditemani **Zayn**, maskot anak laki-laki berpeci yang memandu setiap permainan seperti seorang guru.
+Zayn menyapa sesuai waktu (pagi, siang, sore, malam), memanggil anak dengan namanya, menjelaskan dengan
+contoh nyata ("merah, seperti buah apel"), dan tidak pernah memarahi. Kalau jawaban anak salah, Zayn
+mengajak menghitung ulang pelan-pelan. Setiap kalimat Zayn juga tampil di gelembung kata, dan mulut
+Zayn bergerak selama ia bicara.
+
+Aplikasi ini tanpa iklan, tanpa login, dan bisa dipakai tanpa internet.
 
 ## Isi aplikasi
 
@@ -25,15 +32,16 @@ anak tidak pernah "kalah": kalau jawabannya salah, aplikasi mengajak menghitung 
 
 Setiap jawaban benar memberi ⭐ bintang dan efek konfeti.
 
-**Menu Orang Tua** (di bagian bawah beranda, dibuka dengan soal perkalian agar anak tidak bisa masuk):
-nyalakan/matikan suara, atur kecepatan bicara, atur jeda berhitung supaya lebih pelan, dan uji suara Indonesia/Arab.
+**Menu Orang Tua** (tombol roda gigi di beranda, dibuka dengan soal perkalian agar anak tidak bisa masuk):
+isi **nama panggilan anak**, nyalakan/matikan suara, atur kecepatan bicara, atur jeda berhitung supaya lebih pelan,
+dan uji suara Indonesia/Arab.
 
 ## Cara mendapatkan APK
 
 APK dibangun otomatis oleh **GitHub Actions** setiap kali ada push:
 
 1. Buka tab **Actions** di repositori GitHub, lalu pilih workflow **Build APK Android** yang terbaru.
-2. Unduh artefak **DuniaCeria-apk** (berupa file zip yang berisi `DuniaCeria.apk`).
+2. Unduh artefak **BelajarBersamaZayn-apk** (berupa file zip yang berisi `BelajarBersamaZayn.apk`).
 3. Salin file tersebut ke HP, lalu buka. Izinkan *"Instal dari sumber tidak dikenal"* bila diminta.
 
 Kalau kamu membuat tag `v1.0.0` lalu push, APK juga otomatis dilampirkan di halaman **Releases**.
@@ -67,7 +75,8 @@ npm run serve         # buka http://localhost:8080
 
 ```
 www/                 aplikasi (HTML/CSS/JS murni, tanpa framework, berjalan offline)
-  js/core.js         navigasi, suara (TTS), efek suara, bintang, konfeti
+  js/icons.js        ikon SVG, ilustrasi menu, dan maskot Zayn
+  js/core.js         navigasi, suara (TTS), gelembung Zayn, kalimat guru, bintang, konfeti
   js/data.js         data angka, hijaiyah, ABC, hewan, warna, bentuk
   js/counting.js     semua permainan berhitung
   js/hijaiyah.js     belajar huruf hijaiyah
@@ -75,6 +84,7 @@ www/                 aplikasi (HTML/CSS/JS murni, tanpa framework, berjalan offl
   js/games.js        kartu belajar, cocokkan kartu, pecah balon
   js/main.js         beranda & menu orang tua
 android/             proyek Android (Capacitor)
+www/fonts/           font Fredoka, Nunito, dan Noto Naskh Arabic (lisensi OFL), disertakan agar bisa offline
 assets/              sumber ikon & splash screen
 ```
 

@@ -1,8 +1,8 @@
 {
-  "appId": "com.duniaceria.anak",
-  "appName": "Dunia Ceria",
+  "appId": "com.rizkymuhammad.belajarzayn",
+  "appName": "Belajar bersama Zayn",
   "webDir": "www",
   "android": {
-    "backgroundColor": "#FFF6E0"
+    "backgroundColor": "#FFF8EF"
   }
 }
